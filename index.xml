@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dustin Pedlow</title>
+    <link>https://dustinpedlow.xyz/</link>
+    <description>Recent content on Dustin Pedlow</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 04 May 2024 20:52:22 -0500</lastBuildDate><atom:link href="https://dustinpedlow.xyz/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>A sshlockout Tutorial</title>
+      <link>https://dustinpedlow.xyz/home/a-sshlockout-tutorial/</link>
+      <pubDate>Sat, 04 May 2024 20:52:22 -0500</pubDate>
+      
+      <guid>https://dustinpedlow.xyz/home/a-sshlockout-tutorial/</guid>
+      <description>This is a quick look at sshlockout and how to effectively use it to ban attackers on OpenBSD machines.
+The sshlockout program is a extra layer of security that bans IP addresses that have reached a maximum threshold of failed password attempts. The sshlockout program originates from DragonFlyBSD and has been ported to OpenBSD. If you&amp;rsquo;re from the Linux world this is similar to Fail2Ban and is a very simple program.</description>
+    </item>
+    
+    <item>
+      <title>About me</title>
+      <link>https://dustinpedlow.xyz/about/</link>
+      <pubDate>Wed, 04 Jan 2023 17:12:40 +0000</pubDate>
+      
+      <guid>https://dustinpedlow.xyz/about/</guid>
+      <description>Hello internet! My name is Dustin and I am a recent graduate Network Administration Technology student at my local college. In my spare time I enjoy working on my homelab and learning about both Windows and Unix-like operating systems. I have a love of Linux and the opensource projects that power it. I also like learning about cyber security and how to make systems more secure and reliable. I am a bit of a hardware enthusiast and love to build/upgrade computers and spend hours tweaking the performance and power usage to fit the use of the computer or server.</description>
+    </item>
+    
+  </channel>
+</rss>
