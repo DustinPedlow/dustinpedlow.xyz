@@ -13,11 +13,11 @@
     
     <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="A sshlockout Tutorial"/>
-<meta name="twitter:description" content="This is a quick look at sshlockout and how to effectively use it to ban attackers on OpenBSD machines.
+<meta name="twitter:description" content="This is a quick look at sshlockout and how to effectively use it to ban ssh brute force attempts on OpenBSD machines.
 The sshlockout program is a extra layer of security that bans IP addresses that have reached a maximum threshold of failed password attempts. The sshlockout program originates from DragonFlyBSD and has been ported to OpenBSD. If you&rsquo;re from the Linux world this is similar to Fail2Ban and is a very simple program."/>
 
     <meta property="og:title" content="A sshlockout Tutorial" />
-<meta property="og:description" content="This is a quick look at sshlockout and how to effectively use it to ban attackers on OpenBSD machines.
+<meta property="og:description" content="This is a quick look at sshlockout and how to effectively use it to ban ssh brute force attempts on OpenBSD machines.
 The sshlockout program is a extra layer of security that bans IP addresses that have reached a maximum threshold of failed password attempts. The sshlockout program originates from DragonFlyBSD and has been ported to OpenBSD. If you&rsquo;re from the Linux world this is similar to Fail2Ban and is a very simple program." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://dustinpedlow.xyz/home/a-sshlockout-tutorial/" /><meta property="article:section" content="home" />
@@ -97,14 +97,13 @@ The sshlockout program is a extra layer of security that bans IP addresses that 
     </header>
     <div class="post-content">
       <hr>
-<p>This is a quick look at sshlockout and how to effectively use it to ban attackers on OpenBSD machines.</p>
+<p>This is a quick look at sshlockout and how to effectively use it to ban ssh brute force attempts on OpenBSD machines.</p>
 <p>The sshlockout program is a extra layer of security that bans IP addresses that have reached a maximum threshold of failed password attempts. The sshlockout program originates from DragonFlyBSD and has been ported to OpenBSD. If you&rsquo;re from the Linux world this is similar to Fail2Ban and is a very simple program. When sshlockout is setup using the settings in the manpage it will ban any IP address that exceeds 5 incorrect passwords in one hour. The blocked IP address by default is blocked for one day and then it is allowed to attempt to login again.</p>
 <p>Before configuring sshlockout I <strong>STRONGLY</strong> recommend the following:</p>
 <ul>
 <li>Generate RSA keys for ssh authentication</li>
 <li>disable ssh password authentication</li>
 <li>disable root ssh authentication</li>
-<li>Change the default ssh port</li>
 </ul>
 <p>Once all of those tasks are done it is time for the installation!</p>
 </br>
@@ -143,12 +142,25 @@ block in quick on egress proto tcp from &lt;lockout&gt; to port 22
 </br>
 <h1 id="testing">Testing</h1>
 <hr>
-<p>The way to test if sshlockout is working is by trying to login from a different IP address. You can <em>VPN</em> into a server and <strong>move your ssh keys into a different directory</strong> so the ssh command will not use them. Then you can try to ssh into your server and with random credentials. <strong>After 5 failed attempts</strong> when you try to use ssh it will just <em>hang instead of asking for credentials</em>. To escape this it required user intervention with a <em>Ctrl+C</em>.</p>
+<p>The easiest way to test if sshlockout is working is by trying to login from a different public IP address using password authentication. For this tutorial you will need to have a VPN service setup on your client computer used for testing. If you have password authentication disabled on your server you can enable it by doing the following:</p>
+<p>Run the command</p>
+<pre><code>vi /etc/ssh/sshd_config
+</code></pre>
+<p>Find the line</p>
+<pre><code>PasswordAuthentication no
+</code></pre>
+<p>Edit the text to</p>
+<pre><code>PasswordAuthentication yes
+</code></pre>
+<p>Then restart ssh with the command</p>
+<pre><code>rcctl restart sshd
+</code></pre>
+<p>Once this is finished you can return to your client PC. Use your VPN service to VPN into a server with a different public IP. If you have keypair authentication setup on the server move the keys on your client computer to a different directory so ssh doesn&rsquo;t try to use them. Now try to ssh into your server and type in <strong>random incorrect credentials</strong>. After <strong>5 failed attempts</strong> when you try to use ssh it will <em>hang instead of asking for credentials</em>. To escape this it required user intervention with a <em>Ctrl+C</em>.</p>
 </br>
-<p>After getting banned you should check you <strong>public IP while your VPN connection is active</strong>. Then <em>disconnect</em> from your <em>VPN</em> and <strong>move your RSA keys back to ~/.ssh</strong>. Now you can <em>ssh into your remote webserver</em> and run the command:</p>
+<p>After getting banned you should check you <strong>public IP while your VPN connection is active</strong> and note it down. Then <em>disconnect</em> from your <em>VPN</em> and <strong>move your RSA keys back to ~/.ssh</strong>. Now you can <em>ssh into your remote webserver</em> and run the command:</p>
 <pre><code>pfctl -t lockout -T show | grep your.vpn.ip.address
 </code></pre>
-<p>Now it will <strong>returned the VPN&rsquo;s IP address</strong> which confirms that it has been added to the blocklist.</p>
+<p>Now it will returned the VPN&rsquo;s IP address which confirms that it has been added to the blocklist.</p>
 </br>
 <h1 id="helpful-resources">Helpful Resources</h1>
 <hr>
