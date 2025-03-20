@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>OpenBSD SSHGuard Tutorial // Dustin Pedlow</title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.111.3">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="dustin pedlow" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5cf0c8bc065f08ef2a53c485f48a0ec3a8b299e389d4eb9fb7708dfc2e6de2ef.css" />
+
+    
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="OpenBSD SSHGuard Tutorial"/>
+<meta name="twitter:description" content="This is a quick look at SSHGuard and how to effectively use it to ban ssh brute force attacks on OpenBSD machines.
+The sshguard program is an extra layer of security that bans IP addresses that have reached a maximum threshold of failed password attempts. The SSHGuard program can monitor multiple log sources and block based on a threat weighted system. By default SSHGuard will block an IP for 120 seconds and following blocks will increase by a factor of 1."/>
+
+    <meta property="og:title" content="OpenBSD SSHGuard Tutorial" />
+<meta property="og:description" content="This is a quick look at SSHGuard and how to effectively use it to ban ssh brute force attacks on OpenBSD machines.
+The sshguard program is an extra layer of security that bans IP addresses that have reached a maximum threshold of failed password attempts. The SSHGuard program can monitor multiple log sources and block based on a threat weighted system. By default SSHGuard will block an IP for 120 seconds and following blocks will increase by a factor of 1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://dustinpedlow.xyz/home/openbsd-sshguard-tutorial/" /><meta property="article:section" content="home" />
+<meta property="article:published_time" content="2025-03-19T15:54:23-06:00" />
+<meta property="article:modified_time" content="2025-03-19T15:54:23-06:00" />
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://dustinpedlow.xyz"><img class="app-header-avatar" src="/avatar.jpg" alt="dustin pedlow" /></a>
+      <span class="app-header-title">Dustin Pedlow</span>
+      <nav class="app-header-menu">
+          <a class="app-header-menu-item" href="/">Home</a>
+             - 
+          
+          <a class="app-header-menu-item" href="/tags/">Tags</a>
+             - 
+          
+          <a class="app-header-menu-item" href="/about/">About</a>
+      </nav>
+      <p>Proudly Powered by HUGO, HTTPD and OpenBSD</p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/DustinPedlow" target="_blank" rel="noreferrer noopener me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-github">
+  <title>Github</title>
+  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+</svg>
+          </a>
+        
+          <a href="https://www.instagram.com/dustinpedlow/" target="_blank" rel="noreferrer noopener me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-instagram">
+  <title>Instagram</title>
+  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+</svg>
+          </a>
+        
+          <a href="https://ca.linkedin.com/in/dustin-pedlow-b047b630a" target="_blank" rel="noreferrer noopener me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-linkedin">
+  <title>Linkedin</title>
+  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle>
+</svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">OpenBSD SSHGuard Tutorial</h1>
+      <div class="post-meta">
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-calendar">
+  <title>calendar</title>
+  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+</svg>
+          Mar 19, 2025
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-clock">
+  <title>clock</title>
+  <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+          3 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>This is a quick look at SSHGuard and how to effectively use it to ban ssh brute force attacks on OpenBSD machines.</p>
+<p>The sshguard program is an extra layer of security that bans IP addresses that have reached a maximum threshold of failed password attempts. The SSHGuard program can monitor multiple log sources and block based on a threat weighted system. By default SSHGuard will block an IP for 120 seconds and following blocks will increase by a factor of 1.5. If you&rsquo;re familiar with the Linux world, this is similar to Fail2Ban. However, unlike Fail2Ban, SSHGuard is compatible with both Linux and BSD systems.</p>
+<p>Before configuring sshguard it is <strong>STRONGLY</strong> recommend to do the following:</p>
+<ul>
+<li>Disable root ssh authentication</li>
+<li>Generate and use a ED25519 keypair for ssh authentication (with a complex password on the keypair)</li>
+<li>Disable ssh password authentication</li>
+<li>Disable ssh keyboard-interactive authentication</li>
+</ul>
+<br/>
+<h1 id="installation">Installation</h1>
+<hr>
+<p>Use OpenBSD&rsquo;s package manager pkg with the <em>root user</em> or <em>root privileges</em> to install SSHGuard with the command</p>
+<pre><code>    pkg_add sshguard
+</code></pre>
+<br/>
+<h1 id="initial-configuration">Initial Configuration</h1>
+<hr>
+<p>Backup the default configuration with the command:</p>
+<pre><code>cp /etc/sshguard.conf /etc/examples/sshguard.conf
+</code></pre>
+<p>Edit SSHGuard&rsquo;s configuration file:</p>
+<pre><code>vi /etc/sshguard.conf
+</code></pre>
+<p>Find the line BACKEND and confirm it is set to:</p>
+<pre><code>BACKEND=&quot;/usr/local/libexec/sshg-fw-pf&quot;
+</code></pre>
+<p>Find the line FILES and confirm it is set to:</p>
+<pre><code>FILES=/var/log/authlog
+</code></pre>
+<br/>
+<h1 id="password-attempts-threshold">Password Attempts Threshold</h1>
+<hr>
+<p>The default threshold for blocking is 30 points. If you want to lower the threshold to 20 points do the following</p>
+<p>Edit the configuration file with the command:</p>
+<pre><code>vi /etc/sshguard.conf
+</code></pre>
+<p>Find the line:</p>
+<pre><code>THRESHOLD=30
+</code></pre>
+<p>Edit the line to be:</p>
+<pre><code>THRESHOLD=20
+</code></pre>
+<br/>
+<h1 id="block-time">Block Time</h1>
+<hr>
+<p>The default block time is 120 seconds. If for example, if you want to increase the block time to 10 minutes, edit the SSHGuard configuration:</p>
+<pre><code>vi /etc/sshguard.conf
+</code></pre>
+<p>Find the line:</p>
+<pre><code>BLOCK_TIME=120
+</code></pre>
+<p>Change the time to 10 minutes (in seconds):</p>
+<pre><code>BLOCK_TIME=600
+</code></pre>
+<br/>
+<h1 id="blacklists-and-whitelists">Blacklists and Whitelists</h1>
+<hr>
+<p>Creating Blacklist or Whitelist will permanently block or allow ssh attempts. These files are not automatically created on OpenBSD. I&rsquo;d recommend putting them into /etc as they are config files just like the sshguard.conf file. This tutorial will put them in a directory with /etc to keep them organized. Run all the following commands as root or with root permissions.</p>
+<p>Add a configuration directory for SSHGuard:</p>
+<pre><code>mkdir /etc/sshguard.d
+</code></pre>
+<p>Edit the SSHGuard configuration with the command:</p>
+<pre><code>vi /etc/sshguard
+</code></pre>
+<p>Find the line:</p>
+<pre><code>#BLACKLIST_FILE=
+</code></pre>
+<p>Edit it to look like:</p>
+<pre><code>BLACKLIST_FILE=/etc/sshguard.d/sshguard.blacklist
+</code></pre>
+<p>Find the line:</p>
+<pre><code>#WHITELIST_FILE=
+</code></pre>
+<p>Edit it to look like:</p>
+<pre><code>WHITELIST_FILE=/etc/sshguard.d/sshguard.whitelist
+</code></pre>
+<br/>
+<h1 id="persistent-tables">Persistent tables</h1>
+<hr>
+<p>A reminder that pf tables are not persistent and will be cleared if the system is restart or killed.</p>
+<p>Dump the table with the command:</p>
+<pre><code>pfctl -t sshguard -T show &gt; sshguardtabledump.txt
+</code></pre>
+<p>Consider making a more complex script for crontab to properly backup you SSHGuard table.</p>
+
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
